@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎱 미니 로또</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            color: #fff;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #ffd700, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+        }
+
+        .subtitle {
+            color: #8892b0;
+            margin-bottom: 25px;
+            font-size: 1rem;
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #ccd6f6;
+        }
+
+        /* Number Selection Grid */
+        .number-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            max-width: 420px;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .number-btn {
+            width: 45px;
+            height: 45px;
+            border: none;
+            border-radius: 50%;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .number-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.2) 0%, transparent 50%);
+            border-radius: 50%;
+        }
+
+        /* Color ranges for numbers */
+        .number-btn.range-1 {
+            background: linear-gradient(145deg, #ffc107, #ff9800);
+            color: #000;
+        }
+
+        .number-btn.range-2 {
+            background: linear-gradient(145deg, #2196f3, #1976d2);
+            color: #fff;
+        }
+
+        .number-btn.range-3 {
+            background: linear-gradient(145deg, #f44336, #d32f2f);
+            color: #fff;
+        }
+
+        .number-btn.range-4 {
+            background: linear-gradient(145deg, #9c27b0, #7b1fa2);
+            color: #fff;
+        }
+
+        .number-btn.range-5 {
+            background: linear-gradient(145deg, #4caf50, #388e3c);
+            color: #fff;
+        }
+
+        .number-btn:hover:not(.selected):not(:disabled) {
+            transform: scale(1.15);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+
+        .number-btn.selected {
+            transform: scale(1.1);
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.8), inset 0 0 15px rgba(0, 0, 0, 0.3);
+            border: 3px solid #ffd700;
+        }
+
+        .number-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Selected Numbers Display */
+        .selected-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .selected-numbers {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .selected-slot {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+
+        .selected-slot.filled {
+            border: none;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .selection-count {
+            color: #8892b0;
+            font-size: 0.9rem;
+        }
+
+        .selection-area {
+            transition: all 0.4s ease;
+        }
+
+        .selection-area.hidden {
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Draw Button */
+        .draw-btn {
+            padding: 15px 50px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            border: none;
+            border-radius: 50px;
+            background: linear-gradient(135deg, #ffd700, #ff6b6b);
+            color: #000;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(255, 107, 107, 0.3);
+            margin-bottom: 30px;
+        }
+
+        .draw-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(255, 107, 107, 0.4);
+        }
+
+        .draw-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Drawing Animation Area */
+        .draw-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .draw-machine {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #2d2d44, #1a1a2e);
+            border: 4px solid #4a4a6a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .draw-machine::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+        }
+
+        .draw-machine.spinning {
+            animation: rumble 0.15s infinite;
+        }
+
+        @keyframes rumble {
+
+            0%,
+            100% {
+                transform: translateY(0) rotate(0deg);
+            }
+
+            25% {
+                transform: translateY(-2px) rotate(-1deg);
+            }
+
+            50% {
+                transform: translateY(1px) rotate(0.5deg);
+            }
+
+            75% {
+                transform: translateY(-1px) rotate(-0.5deg);
+            }
+        }
+
+        .current-ball {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: 800;
+            opacity: 0;
+            transform: scale(0) translateY(-30px) rotate(-180deg);
+            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+        }
+
+        .current-ball::before {
+            content: '';
+            position: absolute;
+            top: 5px;
+            left: 15px;
+            width: 15px;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+        }
+
+        .current-ball.show {
+            opacity: 1;
+            transform: scale(1) translateY(0) rotate(0deg);
+        }
+
+        /* Drawn Balls Display */
+        .drawn-balls-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .drawn-balls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .drawn-ball {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            font-weight: 700;
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .drawn-ball::before {
+            content: '';
+            position: absolute;
+            top: 5px;
+            left: 12px;
+            width: 12px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+        }
+
+        .drawn-ball.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .drawn-ball.matched {
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.8);
+            border: 3px solid #ffd700;
+        }
+
+        .bonus-separator {
+            font-size: 2rem;
+            color: #8892b0;
+            margin: 0 5px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .bonus-separator.show {
+            opacity: 1;
+        }
+
+        .bonus-ball {
+            background: linear-gradient(145deg, #e91e63, #c2185b) !important;
+        }
+
+        /* Result Display */
+        .result-container {
+            text-align: center;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 20px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+            max-width: 500px;
+        }
+
+        .result-container.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .result-title {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .result-title.winner {
+            background: linear-gradient(90deg, #ffd700, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .result-message {
+            color: #ccd6f6;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+        }
+
+        .match-info {
+            color: #8892b0;
+            font-size: 0.95rem;
+        }
+
+        /* Reset Button */
+        .reset-btn {
+            padding: 12px 40px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            font-family: 'Outfit', sans-serif;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50px;
+            background: transparent;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .reset-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #fff;
+        }
+
+        /* Confetti */
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            top: -10px;
+            animation: fall 3s linear forwards;
+            z-index: 1000;
+        }
+
+        @keyframes fall {
+            to {
+                top: 100vh;
+                transform: rotate(720deg);
+            }
+        }
+
+        /* Ball colors */
+        .ball-range-1 {
+            background: linear-gradient(145deg, #ffc107, #ff9800);
+            color: #000;
+        }
+
+        .ball-range-2 {
+            background: linear-gradient(145deg, #2196f3, #1976d2);
+            color: #fff;
+        }
+
+        .ball-range-3 {
+            background: linear-gradient(145deg, #f44336, #d32f2f);
+            color: #fff;
+        }
+
+        .ball-range-4 {
+            background: linear-gradient(145deg, #9c27b0, #7b1fa2);
+            color: #fff;
+        }
+
+        .ball-range-5 {
+            background: linear-gradient(145deg, #4caf50, #388e3c);
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🎱 미니 로또</h1>
+    <p class="subtitle">행운의 6개 숫자를 선택하세요!</p>
+
+    <!-- Number Selection -->
+    <p class="section-title selection-area" id="selectionTitle">숫자 선택 (1~45)</p>
+    <div class="number-grid selection-area" id="numberGrid"></div>
+
+    <!-- Selected Numbers Display -->
+    <div class="selected-container">
+        <p class="section-title">내가 선택한 번호</p>
+        <div class="selected-numbers" id="selectedNumbers">
+            <div class="selected-slot" data-index="0"></div>
+            <div class="selected-slot" data-index="1"></div>
+            <div class="selected-slot" data-index="2"></div>
+            <div class="selected-slot" data-index="3"></div>
+            <div class="selected-slot" data-index="4"></div>
+            <div class="selected-slot" data-index="5"></div>
+        </div>
+        <p class="selection-count"><span id="selectionCount">0</span> / 6 선택됨</p>
+    </div>
+
+    <!-- Draw Button -->
+    <button class="draw-btn" id="drawBtn" disabled>🎰 뽑기</button>
+
+    <!-- Drawing Animation -->
+    <div class="draw-container">
+        <div class="draw-machine" id="drawMachine">
+            <div class="current-ball" id="currentBall"></div>
+        </div>
+
+        <div class="drawn-balls-container">
+            <p class="section-title">추첨 결과</p>
+            <div class="drawn-balls" id="drawnBalls">
+                <div class="drawn-ball" data-index="0"></div>
+                <div class="drawn-ball" data-index="1"></div>
+                <div class="drawn-ball" data-index="2"></div>
+                <div class="drawn-ball" data-index="3"></div>
+                <div class="drawn-ball" data-index="4"></div>
+                <div class="drawn-ball" data-index="5"></div>
+                <span class="bonus-separator" id="bonusSeparator">+</span>
+                <div class="drawn-ball bonus-ball" data-index="6"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Result Display -->
+    <div class="result-container" id="resultContainer">
+        <h2 class="result-title" id="resultTitle"></h2>
+        <p class="result-message" id="resultMessage"></p>
+        <p class="match-info" id="matchInfo"></p>
+        <button class="reset-btn" id="resetBtn">🔄 다시 하기</button>
+    </div>
+
+    <script>
+        // Game State
+        let selectedNumbers = [];
+        let drawnNumbers = [];
+        let bonusNumber = null;
+        let isDrawing = false;
+
+        // DOM Elements
+        const numberGrid = document.getElementById('numberGrid');
+        const selectedNumbersDiv = document.getElementById('selectedNumbers');
+        const selectionCount = document.getElementById('selectionCount');
+        const drawBtn = document.getElementById('drawBtn');
+        const drawMachine = document.getElementById('drawMachine');
+        const currentBall = document.getElementById('currentBall');
+        const drawnBallsDiv = document.getElementById('drawnBalls');
+        const bonusSeparator = document.getElementById('bonusSeparator');
+        const resultContainer = document.getElementById('resultContainer');
+        const resultTitle = document.getElementById('resultTitle');
+        const resultMessage = document.getElementById('resultMessage');
+        const matchInfo = document.getElementById('matchInfo');
+        const resetBtn = document.getElementById('resetBtn');
+        const selectionTitle = document.getElementById('selectionTitle');
+
+        // Initialize number grid
+        function initNumberGrid() {
+            for (let i = 1; i <= 45; i++) {
+                const btn = document.createElement('button');
+                btn.className = `number-btn ${getNumberRangeClass(i)}`;
+                btn.textContent = i;
+                btn.dataset.number = i;
+                btn.addEventListener('click', () => toggleNumber(i, btn));
+                numberGrid.appendChild(btn);
+            }
+        }
+
+        // Get color range class based on number
+        function getNumberRangeClass(num) {
+            if (num <= 10) return 'range-1';
+            if (num <= 20) return 'range-2';
+            if (num <= 30) return 'range-3';
+            if (num <= 40) return 'range-4';
+            return 'range-5';
+        }
+
+        // Get ball color class
+        function getBallClass(num) {
+            if (num <= 10) return 'ball-range-1';
+            if (num <= 20) return 'ball-range-2';
+            if (num <= 30) return 'ball-range-3';
+            if (num <= 40) return 'ball-range-4';
+            return 'ball-range-5';
+        }
+
+        // Toggle number selection
+        function toggleNumber(num, btn) {
+            if (isDrawing) return;
+
+            const index = selectedNumbers.indexOf(num);
+            if (index > -1) {
+                // Deselect
+                selectedNumbers.splice(index, 1);
+                btn.classList.remove('selected');
+            } else if (selectedNumbers.length < 6) {
+                // Select
+                selectedNumbers.push(num);
+                btn.classList.add('selected');
+            }
+
+            updateSelectedDisplay();
+            updateDrawButton();
+        }
+
+        // Update selected numbers display
+        function updateSelectedDisplay() {
+            const slots = selectedNumbersDiv.querySelectorAll('.selected-slot');
+            slots.forEach((slot, index) => {
+                if (selectedNumbers[index]) {
+                    slot.textContent = selectedNumbers[index];
+                    slot.className = `selected-slot filled ${getBallClass(selectedNumbers[index])}`;
+                } else {
+                    slot.textContent = '';
+                    slot.className = 'selected-slot';
+                }
+            });
+            selectionCount.textContent = selectedNumbers.length;
+        }
+
+        // Update draw button state
+        function updateDrawButton() {
+            drawBtn.disabled = selectedNumbers.length !== 6 || isDrawing;
+        }
+
+        // Generate random numbers for draw
+        function generateDrawNumbers() {
+            const numbers = [];
+            const pool = Array.from({ length: 45 }, (_, i) => i + 1);
+
+            // Shuffle and pick 7 numbers (6 main + 1 bonus)
+            for (let i = pool.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [pool[i], pool[j]] = [pool[j], pool[i]];
+            }
+
+            return {
+                main: pool.slice(0, 6),
+                bonus: pool[6]
+            };
+        }
+
+        // Animate drawing
+        async function startDraw() {
+            isDrawing = true;
+            drawBtn.disabled = true;
+            resultContainer.classList.remove('show');
+
+            // Hide number selection area
+            numberGrid.classList.add('hidden');
+            selectionTitle.classList.add('hidden');
+
+            // Sort selected numbers and update display
+            selectedNumbers.sort((a, b) => a - b);
+            updateSelectedDisplay();
+
+            // Reset drawn balls display
+            const drawnBallElements = drawnBallsDiv.querySelectorAll('.drawn-ball');
+            drawnBallElements.forEach(ball => {
+                ball.classList.remove('show', 'matched');
+                ball.textContent = '';
+                ball.className = 'drawn-ball';
+            });
+            bonusSeparator.classList.remove('show');
+
+            // Generate numbers
+            const result = generateDrawNumbers();
+            drawnNumbers = result.main.sort((a, b) => a - b);
+            bonusNumber = result.bonus;
+
+            // Draw each ball with animation
+            drawMachine.classList.add('spinning');
+
+            for (let i = 0; i < 6; i++) {
+                await animateBallDraw(drawnNumbers[i], i);
+            }
+
+            // Draw bonus ball
+            await animateBallDraw(bonusNumber, 6, true);
+
+            drawMachine.classList.remove('spinning');
+            currentBall.classList.remove('show');
+
+            // Show results
+            setTimeout(() => {
+                showResults();
+            }, 500);
+        }
+
+        // Animate single ball draw
+        function animateBallDraw(number, index, isBonus = false) {
+            return new Promise(resolve => {
+                // Show ball in machine
+                setTimeout(() => {
+                    currentBall.textContent = number;
+                    currentBall.className = `current-ball ${isBonus ? 'bonus-ball' : getBallClass(number)}`;
+                    currentBall.classList.add('show');
+                }, 300);
+
+                // Move to result area
+                setTimeout(() => {
+                    currentBall.classList.remove('show');
+
+                    if (isBonus) {
+                        bonusSeparator.classList.add('show');
+                    }
+
+                    const targetBall = drawnBallsDiv.querySelector(`[data-index="${index}"]`);
+                    targetBall.textContent = number;
+                    if (isBonus) {
+                        targetBall.className = `drawn-ball bonus-ball`;
+                    } else {
+                        targetBall.className = `drawn-ball ${getBallClass(number)}`;
+                    }
+
+                    setTimeout(() => {
+                        targetBall.classList.add('show');
+
+                        // Check if matched
+                        if (!isBonus && selectedNumbers.includes(number)) {
+                            targetBall.classList.add('matched');
+                        }
+
+                        resolve();
+                    }, 100);
+                }, 800);
+            });
+        }
+
+        // Calculate and show results
+        function showResults() {
+            // Count matches with main numbers
+            const mainMatches = selectedNumbers.filter(num => drawnNumbers.includes(num)).length;
+            const bonusMatch = selectedNumbers.includes(bonusNumber);
+
+            let rank = 0;
+            let title = '';
+            let message = '';
+
+            if (mainMatches === 6) {
+                rank = 1;
+                title = '🎊 1등 당첨!! 🎊';
+                message = '축하합니다! 모든 번호가 일치했습니다!';
+            } else if (mainMatches === 5 && bonusMatch) {
+                rank = 2;
+                title = '🎉 2등 당첨! 🎉';
+                message = '축하합니다! 5개 일치 + 보너스 번호 일치!';
+            } else if (mainMatches === 5) {
+                rank = 3;
+                title = '🎉 3등 당첨! 🎉';
+                message = '축하합니다! 5개 번호가 일치했습니다!';
+            } else if (mainMatches === 4) {
+                rank = 4;
+                title = '🎉 4등 당첨! 🎉';
+                message = '축하합니다! 4개 번호가 일치했습니다!';
+            } else if (mainMatches === 3) {
+                rank = 5;
+                title = '🎉 5등 당첨! 🎉';
+                message = '축하합니다! 3개 번호가 일치했습니다!';
+            } else {
+                title = '😢 아쉽네요';
+                message = '아쉽게도 낙첨되었습니다.';
+            }
+
+            resultTitle.textContent = title;
+            resultTitle.className = rank > 0 ? 'result-title winner' : 'result-title';
+            resultMessage.textContent = message;
+            matchInfo.textContent = `일치한 번호: ${mainMatches}개${(mainMatches === 5 && bonusMatch) ? ' (보너스 번호 일치)' : ''}`;
+
+            resultContainer.classList.add('show');
+
+            // Confetti for winners
+            if (rank > 0) {
+                createConfetti();
+            }
+
+            isDrawing = false;
+        }
+
+        // Create confetti effect
+        function createConfetti() {
+            const colors = ['#ffd700', '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ff9a9e'];
+
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + 'vw';
+                    confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                    confetti.style.opacity = Math.random() * 0.8 + 0.2;
+                    document.body.appendChild(confetti);
+
+                    setTimeout(() => confetti.remove(), 3000);
+                }, i * 30);
+            }
+        }
+
+        // Reset game
+        function resetGame() {
+            selectedNumbers = [];
+            drawnNumbers = [];
+            bonusNumber = null;
+            isDrawing = false;
+
+            // Reset number buttons
+            document.querySelectorAll('.number-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+
+            // Reset selected display
+            updateSelectedDisplay();
+
+            // Reset drawn balls
+            const drawnBallElements = drawnBallsDiv.querySelectorAll('.drawn-ball');
+            drawnBallElements.forEach(ball => {
+                ball.classList.remove('show', 'matched');
+                ball.textContent = '';
+                ball.className = 'drawn-ball';
+            });
+            drawnBallElements[6].className = 'drawn-ball bonus-ball';
+            bonusSeparator.classList.remove('show');
+
+            // Reset current ball
+            currentBall.classList.remove('show');
+            currentBall.textContent = '';
+            currentBall.className = 'current-ball';
+
+            // Hide result
+            resultContainer.classList.remove('show');
+
+            // Show number selection area
+            numberGrid.classList.remove('hidden');
+            selectionTitle.classList.remove('hidden');
+
+            // Update button
+            updateDrawButton();
+        }
+
+        // Event listeners
+        drawBtn.addEventListener('click', startDraw);
+        resetBtn.addEventListener('click', resetGame);
+
+        // Initialize
+        initNumberGrid();
+    </script>
+</body>
+
+</html>
